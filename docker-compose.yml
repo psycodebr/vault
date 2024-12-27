@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_DEV_ROOT_TOKEN_ID: root
+    ports:
+      - "8200:8200"
+    volumes:
+      - vault_data:/vault/data
+    command: server -dev
+    networks:
+      - shared_network
+    restart: always
+
+  vault-agent:
+    image: hashicorp/vault:latest
+    container_name: vault-agent
+    volumes:
+      - ./init.sh:/etc/init.sh
+      - /vault:/vault
+    entrypoint: ["/bin/sh", "/etc/init.sh"]
+    networks:
+      - shared_network
+    depends_on:
+      - vault
+    restart: always
+
+volumes:
+  vault_data:
+    name: vault_data
+
+networks:
+  shared_network:
+    name: shared_network
